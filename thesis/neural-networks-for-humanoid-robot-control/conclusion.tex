@@ -1,0 +1,32 @@
+
+%!TEX ROOT=ctutest.tex
+
+\chapter{Conclusion}
+
+In this bachelor thesis, I explored several different neural networks architectures suitable for a bipedal walking task and trained and tested them in the supervised setting. I also conducted a small research of available robotics simulators and robot models.
+
+I continued by explaining the core ideas of reinforcement learning, deep Q-Learning and deterministic policies.
+I further explored the Deep Deterministic Policy Gradient - a model-free general learning algorithm capable of learning different control tasks.
+
+I combined DDPG with recurrent neural networks and prioritized experience replay and was able to successfully apply these methods on a cartpole swingup task and bipedal balancing task using the same model.
+
+\section{Future Work}
+
+There is still a lot of work to be done before the used reinforcement learning methods could be applied to real world applications. The deterministic actor-critic provides a good basis for continuous control reinforcement learning, while deep learning allows the approximation of complicated and even visual policies.
+
+However, the main problem is the stability of learning. I would recommend focusing on these topics in future research:
+
+\begin{itemize}
+\item \textbf{Batch normalization:} recent advancement of deep learning, this technique reduces internal covariate shift by normalizing inputs of each layer \cite{cite:batchnorm}. This could improve generalizing over different tasks and also ease learning of the critic.
+
+\item \textbf{Double Q-Learning:} the Q-Learning critic approximation is often a cause of overestimating the output values. The Double Q-Learning algorithm \cite{cite:doubledqn} fights this by introducing another critic, used exclusively for $Q(s_{t+1},a)$ approximation.
+
+\item \textbf{Picky replay memory:} instead of making use of different sample priorities in replay buffer, it would be best to store only the important and most rewarding states. This is a focus of ongoing research and these methods are sure to improve the stability of the learning process.
+
+\item \textbf{Better exploration policy:} The noise policy plays a crucial role in DDPG and other algorithms and the Ornstein-Uhlenbeck process is probably too naive to explore demanding multi-dimensional tasks on its own. The noise should also be able to change its size and focus over time. 
+
+\end{itemize}
+
+\medskip
+
+As for the robot walking task, I would recommend a faster simulation framework than a full-fledged robotics simulator to allow for a proper parameter search without such time demands.

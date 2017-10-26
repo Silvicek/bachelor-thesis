@@ -1,0 +1,82 @@
+\chapter{Training Details}
+\section{Supervised Learning}
+\begin{table}[htbp]
+\begin{tabular}{|c|c|c|}
+\hline 
+Parameter & Value & Short Description \\ 
+\hline \hline 
+$\beta$ & 1e-3 & actor training constant \\ 
+\hline 
+$\gamma$ & 0.99 & TD update constant \\ 
+\hline 
+Critic regularization & 1e-2 & value is divided between critics parameters \\ 
+\hline 
+Recurrent steps & 10 & size of the BPTT limit \\ 
+\hline 
+Batch size & 250 & • \\ 
+\hline 
+Training epochs & 1e3 & • \\ 
+\hline 
+\end{tabular}
+\caption{Supervised training details}
+\label{tab:supervised}
+\end{table}
+
+\section{DDPG}
+
+\begin{table}[htbp]
+\begin{tabular}{|c|c|c|}
+\hline 
+Parameter & Value & Short Description \\ 
+\hline \hline 
+$\alpha$ & 1e-3 & critic training constant \\ 
+\hline 
+$\beta$ & 1e-4 & actor training constant \\ 
+\hline 
+$\gamma$ & 0.99 & TD update constant \\ 
+\hline 
+$\tau$ & 1e-3 & shadow networks training constant \\ 
+\hline 
+Critic regularization & 1e-2 & value is divided between critics parameters \\ 
+\hline 
+Recurrent steps & 10 & size of the BPTT limit \\ 
+\hline 
+Batch size & 64 & • \\ 
+\hline 
+Replay size & 1e6 & • \\ 
+\hline 
+Noise constants & 0.15, 0.2 & $\theta, \sigma$ constants used in OU process \\ 
+\hline 
+Critic learning step & 1e4 & critic learning starts after $n$ steps \\ 
+\hline 
+Actor learning step & 3e4 & actor learning starts after $n$ steps \\ 
+\hline
+Training epochs & >1e6 & • \\ 
+\hline 
+\end{tabular}
+\caption{DDPG training details}
+\label{tab:ddpg}
+\end{table}
+
+\chapter{CD structure}
+
+\begin{itemize}
+\item \texttt{\textbf{/dlbw}}
+
+Contains all the code necessary for running the learning algorithms, for usage see \texttt{README.md}
+
+\item \texttt{\textbf{/software}}
+
+Contains the V-Rep simulator and necessary python libraries.
+\item \texttt{\textbf{/thesis}}
+
+
+Contains the thesis (\texttt{thesis.pdf}) and the \TeX source files
+\item \texttt{\textbf{/videos}}
+\begin{enumerate}
+\item nao\_recorded\_sequence.avi \label{video:sequence}
+\item nao\_supervised.avi \label{video:supervised}
+\item nao\_ddpg\_standing.avi \label{video:standing}
+\item pendulum\_swingup.mp4 \label{video:swingup}
+\end{enumerate}
+\end{itemize}

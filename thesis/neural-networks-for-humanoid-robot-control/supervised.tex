@@ -1,0 +1,314 @@
+\makeatletter
+\newcommand\footnoteref[1]{\protected@xdef\@thefnmark{\ref{#1}}\@footnotemark}
+\makeatother
+%!TEX ROOT=bakalarka.tex
+
+
+\chapter{Supervised Learning}
+\label{chapter:sl}
+
+In this chapter I will describe the simple and recurrent neural networks and their learning algorithms in a supervised setting. This is done primarily to test these models if they are capable enough to generate the outputs necessary for walking.
+
+\section{Introduction}
+
+Supervised learning is the machine learning task of inferring a function from labeled training data. The training data consist of a set of training examples. Each example is a pair consisting of an input vector and a desired output vector. A supervised learning algorithm analyzes the training data and produces an inferred function, which can be used for mapping new examples. Optimal scenario will allow the algorithm to correctly determine the class labels for unseen instances. This requires the learning algorithm to generalize from the training data to unseen situations in a "reasonable" way.\cite{cite:wiki-sl}
+
+In mathematical terms, the goal of supervised learning is optimizing a loss function in form
+
+\begin{equation}
+L(\theta)=\sum_{i=1}^{N}L_i(\theta)
+\end{equation}
+
+where $L_i(\theta)$ is a function of parameters $\theta$ and is associated with the i-th observation in the data set.
+
+\medskip
+
+Common choice of the loss function when optimizing regression is the mean squared error (MSE). MSE has statistical implications, since the Gauss–Markov theorem states that:
+
+ \textit{"In a linear model in which the errors have expectation zero conditional on the independent variables, are uncorrelated and have equal variances, the best linear unbiased estimator of any linear combination of the observations, is its least-squares estimator."} \cite{cite:wiki-mse}
+
+The overall solution minimizes the sum of the squares of the errors made in the results of every single equation.
+\begin{equation}
+\label{eq:loss}
+\min_{\mathbf{\theta}}\dfrac{1}{N} \sum_{i=1}^{N}\left(\mathbf{\hat{y}_i}-\mathbf{y_i}\right)^2
+= \min_{\mathbf{\theta}} \sum_{i=1}^{N}\left(\mathbf{\hat{y}_i}-\mathbf{y_i}\right)^2
+\end{equation}
+$\mathbf{y_i}$ is the i-th observed output,  $\mathbf{\hat{y}}$ is a function of parameters $\mathbf{\theta}$ and i-th observed input $\mathbf{x_i}$.
+\begin{equation}
+\mathbf{\hat{y}_i}=G(\mathbf{\theta, x_i})
+\end{equation}
+
+The inferred function $G$ is usually a function approximator suitable for the task at hand. 
+
+\section{Artificial Neural Networks}
+
+Neural networks (NN) are a family of function approximators inspired by biological processes in the brain. The network is generally presented as a system of interconnected 'neurons' which exchange messages with each other. The connections have numeric weights that can be tuned based on experience, making neural nets adaptive to inputs and capable of learning. A simple example can be seen in fig \ref{fig:nn}.
+
+\begin{figure}
+\includegraphics[width=\textwidth]{images/supervised/nn.pdf}
+\caption{An example neural network with six inputs, two hidden layers and one output}
+\label{fig:nn}
+\end{figure}
+
+
+The basic feed-forward neural network comprises of several building blocks:
+
+\begin{itemize}
+\item \textbf{Layer:} Set of neurons in the same depth in the model. The common NN setup includes an input layer (the size of the input), output layer (the size of the output) and one or more hidden layers.
+
+\item \textbf{Activation function:} In each neuron the information propagates through an activation function. The function is often non-linear and it is this function that introduces non-linearity to the whole function approximation process.
+
+The function should meet a few requirements, most importantly it must be continuous and differentiable (If the learning is done using the function's gradient. This is not necessary in other settings, for example evolutionary learning).
+
+Some examples of commonly used activation functions are: (fig \ref{plot:activations})
+\begin{figure}[htbp]
+\input{plots/supervised/activations.pgf}
+\caption{Commonly used activation functions in order: sigmoid, hyperbolic tangent, rectifier}
+\centering
+\label{plot:activations}
+\end{figure}
+\begin{itemize}
+\item \textbf{Sigmoid function:} Due to its normalization properties, it is often used in the output layer when dealing with classification.
+$$\sigma(x)=\dfrac{1}{1+e^{-x}}$$
+\item \textbf{Hyperbolic tangent:} Another function used for its normalization properties, can be used in various settings, often in hidden layers.
+$$\text{tanh}(x)=\dfrac{e^{2x}-1}{e^{2x}+1}$$
+\item \textbf{Rectifier:} Because of the vanishing gradient problem appearing with previously mentioned activations in deep nets, the linear rectifier unit (ReLU) has gained on popularity in recent years. Efficient computation is another advantage of this activation.
+$$\text{relu}(x)=\begin{cases}
+            x & \text {for } x \geq 0 \\
+            0 & \text{else}\\
+            \end{cases} $$
+\end{itemize}
+
+\end{itemize}
+
+
+The networks's wieghts are then used as parameters to be learned.
+
+An example forward pass of the network on fig. \ref{fig:nn} would look as follows:
+\[
+h=\sigma\left(\underset{1\times 3}{W_3}\text{relu} \left(\underset{3\times 4}{W_2}\cdot\text{relu} \left(\underset{4\times 5}{W_1}\cdot x\right)\right)\right)
+\]
+where $W_i$ are matrices of parameters.
+
+\newpage
+\section{Recurrent Neural Networks}
+
+\subsection{Motivation}
+An ideal function approximator should be able (with perfect information) to deal with the complex mechanism of bipedal (or indeed any) walking. In practice we should pick the methods such that the complexity of the desired solution is as low as possible.
+
+While walking is surely a time-dependent task, the basic feedforward neural network does not take time into consideration (the information goes simply in$\to$out). 
+It would be beneficial to somehow implement a kind of memory that preserves the information from previous time steps. In the context of NNs, recurrent neural networks offer such time dependency features.
+
+\subsection{Theory}
+A recurrent neural network (RNN) is a class of artificial neural networks, where connections between units form a directed cycle. This creates an internal state of the network which allows it to exhibit dynamic temporal behavior. Unlike feedforward neural networks, RNNs can use their internal memory to process arbitrary sequences of inputs. This makes them applicable to temporally correlated tasks.
+
+
+\begin{figure}
+\includegraphics[width=.9\textwidth]{images/supervised/RNN-unrolled.png}
+\vspace{.5cm}
+
+\includegraphics[width=.9\textwidth]{images/supervised/rnn2.png}
+\caption{Visualization of unrolled fully recurrent network\protect\footnotemark}
+\end{figure}
+\footnotetext{\label{foot:img-rnns}
+courtesy of \url{http://colah.github.io/posts/2015-08-Understanding-LSTMs/}}
+There are several classes of RNNs with different properties, I will mention two important ones.
+
+\subsection{Fully recurrent network} This is the basic recurrent architecture: a network of neurons, each with a directed connection to every other unit. Most architectures used nowadays are special cases.
+
+The forward pass of one-layered fully recurrent network may look like this:
+\begin{equation}
+h_t=\sigma \left(\underset{n\times m}{W}x_t+\underset{n\times n}{U}h_{t-1}+\underset{n\times 1}{b}\right)
+\end{equation}
+where $h_t$ is the output of size $n \times 1$ and $x_t$ is the input of size $m \times 1$ in time step $t$.
+
+\subsubsection{Vanishing gradient problem}
+
+The vanishing gradient problem is a difficulty found in training artificial neural networks with gradient-based learning methods and backpropagation. 
+
+In such methods, each of the neural network's weights receives an update proportional to the gradient of the error function with respect to the current weight in each iteration of training. The small size of these weights along with traditional activation functions cause the gradient updates to be small. In the recurrent setting this becomes a problem because with each time step the gradient becomes exponentially smaller. This causes the simple RNN to neglect the early updates the deeper we go into the backpropagation and effectively causes the network to 'forget' previous steps over time.
+
+\subsection{Long short term memory} Numerous researchers now use a deep learning RNN called the Long short term memory (LSTM)\cite{cite:LSTM}. It is a deep learning system that unlike traditional RNNs doesn't have the vanishing gradient problem. LSTM introduces another hidden state and number of 'gates' - essentially special layers designed to promote networks memory capabilities.
+\begin{figure}
+\includegraphics[width=\textwidth]{images/supervised/lstm.png}
+\caption{Visualization of unrolled LSTM\protect\footnotemark}
+\label{fig:lstm}
+\end{figure}
+\footnotetext{\label{foot:img-lstm}
+courtesy of \url{http://colah.github.io/posts/2015-08-Understanding-LSTMs/}}
+
+
+The forward pass of one-layered fully recurrent network looks like this:
+
+\begin{equation}
+\begin{array}{lcl} 
+f_t &=& \sigma \left(W_fx_t+U_fh_{t-1}+b_f\right)
+\\
+i_t &=& \sigma \left(W_ix_t+U_ih_{t-1}+b_i\right)
+\\
+c_t &=& \text{tanh} \left(W_cx_t+U_ch_{t-1}+b_c\right)
+\\
+C_t &=& f_t * C_{t-1} + i_t * c_t
+\\
+o_t &=& \sigma \left(W_ox_t+U_oh_{t-1}+b_o\right)
+\\
+h_t &=& o_t * \text{tanh}(C_t)
+ \end{array}
+\end{equation}
+
+where $W, U, b$ are the network parameters, $x_t$ is the input at time step $t$, $C_t$ and $h_t$ are the hidden states and $h_t$ also acts as the network output. The main hidden state $C_t$ is modified element-wise by a so-called forget gate layer $f_t$, input gate $i_t$ and output gate $o_t$. This can be seen in fig \ref{fig:lstm}. For more information about LSTMs, I recommend blogpost \url{http://colah.github.io/posts/2015-08-Understanding-LSTMs/} which contains clear and simple explanations.
+
+
+
+\section{Optimization}
+When dealing with real problems, it is often impossible to optimize a function analytically. Family of gradient descent (GD) methods uses the function's gradient to step in the direction of steepest descent (or ascent when finding maximum) and incrementally optimizes the function objective.
+\begin{equation}
+\theta_{t+1} = \theta_t - \alpha \nabla_\theta L
+\end{equation}
+
+where $\alpha$ is the step size determining how far in the gradient direction we will step.
+
+When optimizing a function approximator from sampled data points, common practice is to split data into batches and perform a gradient step on the batch. This is significantly more computationally effective then updating parameters for each sample separately (depending on the batch size).
+
+\subsection{Stochastic gradient descent}
+Stochastic gradient descent (SGD) is a gradient descent optimization method for minimizing an objective function that is written as a sum of differentiable functions. The core feature of SGD is picking the batches for GD at random. This change reduces the correlation in learning,  introduced by taking the samples in order. SGD proved itself as an efficient and effective optimization method that was central in many machine learning successes.
+
+\subsection{Adam}
+The SGD itself can be quite limiting since it does not take into account the type of data being used and the change of the function gradient over time. Several SGD variants have been developed over the years using first and second order gradients and utilizing several types of momentum.
+
+\textit{Adam} is a method for efficient stochastic optimization that only requires first-order gradients with little memory requirement. The method computes individual adaptive learning rates for different parameters from estimates of first and second moments of the gradients
+\cite{cite:adam}. See algorithm \ref{algo:adam}.
+
+Adam is very useful when dealing with high dimensional spaces and on-line learning settings. This method has proved instrumental when optimizing the main algorithm of this thesis.
+
+\newcommand{\wm}{\widehat{m}_t}
+\newcommand{\wv}{\widehat{v}_t}
+\begin{algorithm}[t]
+\caption{\emph{Adam}. $g^2_t$ indicates the elementwise square $g_t \odot g_t$. Default settings are $\alpha=0.001$, $\beta_1=0.9$, $\beta_2=0.999$ and $\epsilon = 10^{-8}$. All operations on vectors are element-wise. With $\beta_1^t$ and $\beta_2^t$ denotes $\beta_1$ and $\beta_2$ to the power $t$.}
+\label{algo:adam}
+\begin{algorithmic}
+\STATE $m_0 \gets 0$ (Initialize $1^\text{st}$ moment vector)
+\STATE $v_0 \gets 0$ (Initialize $2^\text{nd}$ moment vector)
+\STATE $t \gets 0$ (Initialize timestep)
+\WHILE{$\theta_t$ not converged}
+\STATE $t \gets t + 1$
+%\STATE $\beta_{1,t} \gets \beta_1\lambda^{t-1}$ (Decay the first moment running average coefficient)
+\STATE $g_t \gets \nabla_{\theta} f_t(\theta_{t-1})$ (Get gradients w.r.t. stochastic objective at timestep $t$)
+\STATE $m_t \gets \beta_1 \cdot m_{t-1} + (1-\beta_1) \cdot g_t$ (Update biased first moment estimate)
+\STATE $v_t \gets \beta_2 \cdot v_{t-1} + (1-\beta_2) \cdot g^2_t$ (Update biased second raw moment estimate)
+\STATE $\wm \gets m_t / (1-\beta_1^t)$ (Compute bias-corrected first moment estimate)
+\STATE $\wv \gets v_t / (1-\beta_2^t)$ (Compute bias-corrected second raw moment estimate)
+\STATE $\theta_t \gets \theta_{t-1} - \alpha \cdot \wm / (\sqrt{\wv} + \epsilon)$ (Update parameters)
+\ENDWHILE
+\RETURN $\theta_t$ (Resulting parameters)
+\end{algorithmic}
+\vspace{-0.05in}
+\end{algorithm}
+
+\subsection{Overfitting, Regularization}
+
+\textit{Overfitting} is a common problem that occurs when a  statistical model (in our case NN) describes a random error or noise instead of the underlying relationship. Overfitting generally occurs when a model is excessively complex, such as having too many parameters relative to the number of observations. A model that has been overfit will generally have poor predictive performance, as it can exaggerate minor fluctuations in the data.
+
+\textit{Regularization} is a technique used for prevention of overfitting by introducing additional information to a loss function. Most common practice is to add a weighted \textit{l2} norm of model's parameters to the original loss function in form
+
+\begin{equation}
+L_{\text{new}}(\theta) = L(\theta) + \lambda \lVert\theta\rVert_2^2
+\end{equation}
+
+This forces the optimization algorithm to keep the parameter's absolute value low and by doing so prevents extreme values from occurring. High parameter values are often the cause of overfitting.
+
+%\begin{figure}
+%\includegraphics[width=\textwidth*\real{0.45}]{images/supervised/regul.png}
+%\caption{Visualization of regularization ---polynomial with coefficients---}
+%\label{fig:regul}
+%\end{figure}
+
+
+\section{Experiments}
+
+The main goal of the supervised experiments was to check which models were capable of learning pre-recorded sequences. 
+
+\subsection{Data}
+
+The data used for learning were extracted from the available V-Rep Nao model. Part of the model is an example script with pre-recorded sequence of desired joint positions. This sequence was played for $N=1000$ time steps in the simulator and the joint positions, joint velocities and accelerometer data were extracted each time-step.
+
+This data served as the input at each step. For the output, the recorded joint positions were shifted by one time-step, so that the NN's goal is to predict the desired joint positions one step into the future.
+
+%\begin{figure}
+%\includegraphics[width=\textwidth]{images/supervised/data2.pdf}
+%\caption{Visualization of unrolled LSTM}
+%\end{figure}
+
+
+\subsection{Implementation, setup}
+I have implemented a fully recurrent neural network using only python's native \textit{numpy} library used for matrix operations. The network was successfully able to mimic the training data, but the implementation itself was troublesome because every small change in the model (for example different activation) forced the whole backpropagation algorithm to change.
+
+\medskip
+
+I rewrote the net using the \textit{Theano} library which I picked for its complex symbolic differentiation capabilities. I constructed sort of a framework for neural networks, partially inspired by the \textit{keras} library. The 'framework' allowed me to construct networks of several neural layers by just specifying the sizes and types of layers consecutively.
+
+The supported layers are:
+\begin{itemize}
+\item Fully connected (dense) layer
+\item Fully recurrent layer
+\item LSTM layer
+\end{itemize}
+
+The Theano library (and a few others - like tensorflow) simplify things greatly. Instead of working out the backpropagation updates by hand (or other means), it is only necessary to input symbolic matrix equations of the forward run and compute the gradient using the library's \textit{grad} function.
+
+\medskip
+
+When training the recurrent networks, I had a few different choices:
+\begin{itemize}
+\item \textbf{Backpropagation through time:} a straightforward learning technique, that unfolds the recurrent network in time by stacking identical copies of the RNN, and redirecting connections within the network to obtain connections between subsequent copies. This process creates a simple (but deep) feedforward network that allows for the use of the basic backpropagation algorithm.
+
+\item \textbf{Limited BPTT:} The previous method however forces the network to unfold once for each time step. This is computationally unsustainable for longer sequences. A simple and commonly used variant of BPTT uses a finite history and limits the number of unfolds.
+
+\item \textbf{Real-time recurrent learning:} RTRL is a gradient-descent method which computes the exact error gradient at every time step. The standard version of the algorithm has time complexity $O(n^4)$ \cite{cite:RTRL-complexity} (where $n$ is number of processing units in the network), which is quite high for effective implementation.
+\end{itemize}
+
+I chose Limited BPTT, because it supports efficient repeated batch learning (unlike BPTT and RTRL), needed for the reinforcement learning experiments.
+
+\subsection{Network notation}
+I will use the following notation (mimicking notation of the python 'framework') in the remainder of this thesis:
+
+\begin{itemize}
+\item \textbf{\{ \}:} basic network container
+\item \textbf{\{\textit{i}, \textit{j}, ...\}:} each number represents a layer of stated size, the layers are connected in succession, the input and output layers are not explicitly mentioned
+\item \textbf{\{lstm, rnn\}:} virtual recurrent layers, the input and output sizes are specified by sizes of the previous and next layer
+\end{itemize}
+
+An example net from figure \ref{fig:nn} would look like this: \{4, 3\}
+
+Unless stated otherwise, the output layer has a tanh activation (to bound the output), hidden layers go through relu activation.
+
+\subsection{Experiments}
+
+The data itself are unfortunately quite limiting, because the recorded sequence is very short and after around 300 time steps it starts repeating itself. Because of this I couldn't use the usual train/validation/test splits and was unable to measure the model's performance by standard means. Instead I evaluated the learned nets on the robot itself, checking which models were able to walk.
+
+I constructed several network architectures and retrained them repeatedly with different initial weights. Then I tested these networks on the robot itself, measuring the time and distance over several (10) runs. This was done to check the networks capability of overcoming the stochastic effects introduced by the simulator.
+
+The nets used in the supervised experiments were the following:
+\{\}, \{10\}, \{50\}, \{10, 10\}, \{50, 50\}, \{100, 100\}, \{lstm\}, \{lstm, 10\}, \{lstm, 100\}, \{rnn\}, \{rnn, 10\}, \{rnn, 100\}
+
+This evaluation process is not entirely correct, because in the supervised learning setting, we are only fitting the provided data and the model doesn't know anything about the real walking task. However this was done mainly to test if the nets were even capable of walking and not to learn them to walk in the full extent.
+
+
+\section{Conclusion}
+
+About a quarter of the networks were capable of walking, however often at the cost of stability. Perhaps the most stable net still capable of walking was \{rnn, 10\}. The results and comparisons can be seen in figures \ref{plot:joints}, \ref{plot:joints2} and also in video~\ref{video:swingup}. For training details, see \ref{tab:supervised}.
+
+\newpage
+
+\begin{figure}[h!]
+\input{plots/supervised/joints.pgf}
+\caption{The recorded Nao joint angles dataset.}
+\centering
+\label{plot:joints}
+\end{figure}
+\begin{figure}[h!]
+\input{plots/supervised/joints2.pgf}
+\caption{The recorded joint angles of a learned \{rnn,10\} net on the robot.}
+\centering
+\label{plot:joints2}
+\end{figure}

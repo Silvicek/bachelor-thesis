@@ -1,0 +1,43 @@
+\select@language {english}
+\select@language {english}
+\select@language {english}
+\select@language {english}
+\select@language {english}
+\select@language {english}
+\select@language {czech}
+\select@language {english}
+\select@language {english}
+\select@language {english}
+\select@language {english}
+\select@language {english}
+\select@language {czech}
+\select@language {english}
+\select@language {english}
+\select@language {english}
+\select@language {english}
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {2.1}{\ignorespaces Main simulation loop\relax }}{4}{figure.2.1}
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {3.1}{\ignorespaces An example neural network with six inputs, two hidden layers and one output\relax }}{8}{figure.3.1}
+\contentsline {figure}{\numberline {3.2}{\ignorespaces Visualization of unrolled fully recurrent network\footnotemark \relax }}{10}{figure.3.2}
+\contentsline {figure}{\numberline {3.3}{\ignorespaces Visualization of unrolled LSTM\relax }}{11}{figure.3.3}
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {4.1}{\ignorespaces Interaction of a RL agent with the environment\relax }}{18}{figure.4.1}
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {5.1}{\ignorespaces The sumtree structure used in prioritization. Example traces are shown in red and green.\relax }}{28}{figure.5.1}
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {A.1}{\ignorespaces The NAO robot joint list\footnotemark \relax }}{35}{figure.A.1}
+\contentsline {figure}{\numberline {A.2}{\ignorespaces Commonly used activation functions in order: sigmoid, hyperbolic tangent, rectifier\relax }}{35}{figure.A.2}
+\contentsline {figure}{\numberline {A.3}{\ignorespaces The recorded Nao joint angles dataset.\relax }}{36}{figure.A.3}
+\contentsline {figure}{\numberline {A.4}{\ignorespaces The recorded joint angles of a learned \{rnn,10\} net on the robot.\relax }}{36}{figure.A.4}
+\contentsline {figure}{\numberline {A.5}{\ignorespaces Comparison of Adam and SGD algorithms on the swingup task. Actor=\{50,50\}, Critic=\{100,100\}\relax }}{37}{figure.A.5}
+\contentsline {figure}{\numberline {A.6}{\ignorespaces Comparison runs on the swingup task. Actor=\{50,50\}, Critic=\{100,100\}\relax }}{37}{figure.A.6}
+\contentsline {figure}{\numberline {A.7}{\ignorespaces Comparison runs on the swingup task. Actor=\{50,50\}, Critic=\{100,100\}, Small Actor=\{\} , Small Critic=\{\}\relax }}{37}{figure.A.7}
+\contentsline {figure}{\numberline {A.8}{\ignorespaces Comparison runs on the swingup task. Actor=\{50,50\}, Critic=\{100,100\}, Small Actor=\{\} , Small Critic=\{\}\relax }}{38}{figure.A.8}
+\contentsline {figure}{\numberline {A.9}{\ignorespaces Pendulum state representation\relax }}{38}{figure.A.9}
+\contentsline {figure}{\numberline {A.10}{\ignorespaces Example runs of OU process with parameters: $\mu =0$, $\theta =0.15$, $\sigma =0.2$\relax }}{38}{figure.A.10}
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }

@@ -1,0 +1,59 @@
+This is BibTeX, Version 0.99d (TeX Live 2015)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: bakalarka.aux
+The style file: alpha.bst
+Database file #1: bakalarka.bib
+Warning--empty journal in cite:LSTM
+Warning--empty journal in cite:gazebo-vrep
+Warning--empty year in cite:gazebo-vrep
+Warning--empty journal in cite:DPG
+Warning--empty journal in cite:wiki-mse
+Warning--empty year in cite:wiki-mse
+Warning--empty journal in cite:wiki-ou
+Warning--empty year in cite:wiki-ou
+Warning--empty journal in cite:wiki-rl
+Warning--empty year in cite:wiki-rl
+Warning--empty journal in cite:wiki-sl
+Warning--empty year in cite:wiki-sl
+You've used 14 entries,
+            2543 wiz_defined-function locations,
+            620 strings with 6393 characters,
+and the built_in function-call counts, 5414 in all, are:
+= -- 493
+> -- 373
+< -- 5
++ -- 136
+- -- 133
+* -- 422
+:= -- 980
+add.period$ -- 38
+call.type$ -- 14
+change.case$ -- 110
+chr.to.int$ -- 11
+cite$ -- 26
+duplicate$ -- 189
+empty$ -- 298
+format.name$ -- 149
+if$ -- 1013
+int.to.chr$ -- 4
+int.to.str$ -- 0
+missing$ -- 14
+newline$ -- 70
+num.names$ -- 42
+pop$ -- 120
+preamble$ -- 1
+purify$ -- 124
+quote$ -- 0
+skip$ -- 148
+stack$ -- 0
+substring$ -- 138
+swap$ -- 7
+text.length$ -- 5
+text.prefix$ -- 5
+top$ -- 0
+type$ -- 112
+warning$ -- 12
+while$ -- 40
+width$ -- 19
+write$ -- 163
+(There were 12 warnings)

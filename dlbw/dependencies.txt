@@ -1,0 +1,2 @@
+conda install -c http://conda.anaconda.org/alejandrito keras
+

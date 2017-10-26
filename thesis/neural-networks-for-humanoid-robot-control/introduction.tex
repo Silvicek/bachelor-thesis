@@ -1,0 +1,33 @@
+
+%!TEX ROOT=ctutest.tex
+
+\chapter{Introduction}
+
+The benefits of having robots capable of walking and performing physical tasks in any environment are endless, ranging from effective industry workers to servants in every household.
+
+Teaching robots how to walk is a long-time goal of control theory, robotics and artificial intelligence research.
+This task is particularly hard, because it involves controlling legs with high degrees of freedom in nonlinear state spaces.
+No general solution has yet been found and the so-far implemented solutions, often utilizing control theory, are model-based and require a full dynamics model of the robot to work.
+
+\section{Used methods}
+
+\textit{Neural networks} are a class of function approximators, applicable for many different tasks including walking. A subclass of neural networks, recurrent neural networks (RNNs) is a perfect fit for the walking task because they are able to capture time-dependent relations between the input and output signals.
+
+\textit{Reinforcement learning} is a general learning 'framework' suitable for (among other things) model-free physical control tasks. However, the developed methods were often applicable only on low dimensional state-spaces with discrete control. Recent advances in deep learning and continuous reinforcement learning have shown great promise in the direction of a general algorithm capable of learning any physical control task.
+
+In this thesis, I focus on these new reinforcement learning methods and combine them with recurrent neural nets. I further apply them on a selected robot, simulated in three dimensions.
+
+\section{Overview of the Thesis}
+In chapter \ref{chapter:robsim}, I describe the selected robot, simulator and simulation settings used in most of the experiments.
+
+Chapter \ref{chapter:sl} briefly introduces the reader to the core ideas of supervised learning and details simple and recurrent neural networks including a few learning algorithms. These methods are then applied on a small data set to test if the neural nets are indeed capable of walking.
+
+Chapter \ref{chapter:rl} contains an introduction to  reinforcement learning theory, including all information necessary for understanding deep Q-learning.
+
+Chapter \ref{chapter:ddpg} details the DDPG algorithm together with prioritized experience replay. I further describe the implementation process and most of the relevant experiments.
+
+
+
+
+
+

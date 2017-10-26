@@ -1,0 +1,326 @@
+%!TEX ROOT=ctutest.tex
+
+
+\chapter{Deep Deterministic Policy Gradient}
+\label{chapter:ddpg}
+
+In this section I describe the DDPG algorithm, detailing the implementation process and the experiments.
+
+\section{The DDPG Algorithm}
+
+Lillicrap, Hunt et al \cite{cite:DDPG} have taken the ideas underlying the success of Deep Q-Learning and combined them with the deterministic policy gradient. 
+
+The main difference between DQL and DDPG lies in the choice of the actor. In DQL, the actor is not explicitly represented and each action is chosen as the $\text{argmax}_a Q(s,a)$. This approach is feasible only in small action spaces and in larger spaces it would require demanding parameter search during each learning step. In DDPG, the actor is another function approximator that inputs state $s_t$ and outputs action $a_t$, $\mu_\theta(s_t)=a_t$.
+
+\begin{algorithm}[ph!]
+  \caption{DDPG algorithm }
+  \label{algo:ddpg}
+  \begin{algorithmic}
+    \STATE Randomly initialize critic network $Q(s, a | \theta^Q)$ and actor
+    $\mu(s | \theta^{\mu})$ with weights $\theta^{Q}$ and $\theta^{\mu}$.
+    \STATE Initialize target network $Q'$ and $\mu'$ with weights $\theta^{Q'}
+    \leftarrow \theta^{Q}$, $\theta^{\mu'} \leftarrow \theta^{\mu}$
+    \STATE Initialize replay buffer $R$
+    \FOR{episode = 1, M}
+      \STATE Initialize a random process $\mathcal{N}$ for action
+      exploration
+      \STATE Receive initial observation state $s_1$
+      \FOR{t = 1, T}
+        \STATE Select action $a_t = \mu(s_t | \theta^{\mu}) + \mathcal{N}_t$
+        according to the current policy and exploration noise
+        \STATE Execute action $a_t$ and observe
+        reward $r_t$ and observe new state $s_{t+1}$
+        \STATE Store transition $(s_t, a_t,
+                r_t, s_{t+1})$ in $R$
+        \STATE Sample a random minibatch of $N$ transitions
+               $(s_i, a_i,
+        r_i, s_{i + 1})$ from $R$
+        \STATE Set $ y_i = 
+            \begin{cases}
+            r_i + \gamma Q'(s_{i + 1}, \mu(s_{i+1})) & \text {for non terminal state} \\
+            r_i & \text{for terminal state} \\
+            \end{cases} $
+        \STATE Update critic by minimizing the loss:
+               $L = \frac{1}{N} \sum_i (y_i -
+               Q(s_i, a_i | \theta^Q))^2$
+        \STATE Update the actor policy using the sampled policy gradient:
+        \begin{equation*}
+            \nabla_{\theta^{\mu}} J \approx
+            \frac{1}{N} \sum_i
+               \nabla_{a} Q(s, a | \theta^Q)|_{s = s_i, a = \mu(s_i)}
+               \nabla_{\theta^\mu} \mu(s | \theta^\mu)|_{s_i}
+         \end{equation*}
+        \STATE Update the target networks:
+          \begin{equation*}
+            \theta^{Q'} \leftarrow \tau \theta^{Q} + (1 - \tau) \theta^{Q'}
+          \end{equation*}
+          \begin{equation*}
+            \theta^{\mu'} \leftarrow \tau \theta^{\mu} +
+                (1 - \tau) \theta^{\mu'}
+          \end{equation*}
+        \ENDFOR
+    \ENDFOR
+  \end{algorithmic}
+\end{algorithm}
+
+
+The Deep Deterministic Policy Gradient (DDPG, see algorithm \ref{algo:ddpg} at the end of this chapter) has been successfully applied on an array of diverse continuous control tasks including cartpole swingup, 2D legged locomotion or dexterous manipulation. Some of the tasks were also solved directly from visual inputs. However, it has not been used for locomotion in three dimensions.
+
+\section{Implementation}
+Following the implementation of the supervised methods, I continued with the Theano library. Making the code work has proved to be quite a challenge due to several important details that slipped the current (at the time of implementation the paper was just submitted to the ICLR 2016 conference) version of the DDPG paper.
+
+\subsection{DPG Simplification}
+The deterministic policy gradient, as presented in both DPG and DDPG papers is in the form of
+\[
+\nabla_\theta J(\mu_\theta)= \mathbb{E}_{s\sim\rho^\mu}[\nabla_\theta \mu_\theta(s) \nabla_aQ^\mu(s,a)]
+\]
+To add confusion, in the DPG paper the expression is presented in reverse order ($\nabla_\theta J(\mu_\theta)= \mathbb{E}_{s\sim\rho^\mu}[\nabla_aQ^\mu(s,a)\nabla_\theta \mu_\theta(s)]$).
+
+The equation consists of two terms:
+\begin{itemize}
+\item $\nabla_aQ^\mu(s,a)$: this is a row vector containing the expression 
+\[ \nabla_aQ^\mu(s,a)=\left[ \dfrac{\partial Q}{\partial a_1}, \dots , \dfrac{\partial Q}{\partial a_n} \right] \]
+
+\item $\nabla_\theta \mu_\theta(s)$:  this is a matrix of size $n \times l$\footnote{
+$m=$ size of the state feature vector, 
+$n=$ size of the action, 
+$l=$ number of actor parameters
+}
+\[
+  \nabla_\theta \mu_\theta(s)=
+  \left[ {\begin{array}{ccc}
+   \dfrac{\partial a_1}{\partial \theta_1} & \dots & \dfrac{\partial a_1}{\partial \theta_l}\\
+\vdots & \ddots & \vdots \\
+\dfrac{\partial a_n}{\partial \theta_1} & \dots & \dfrac{\partial a_n}{\partial \theta_l}
+
+      \end{array} } \right]
+\]
+\end{itemize}
+When comparing the dimensions, the order became clear ($1 \times n \cdot n \times l = 1 \times l$). What's more important, after multiplying these terms we arrive at the following expression
+
+\[ 
+\nabla_aQ^\mu(s,a)\nabla_\theta \mu_\theta(s)=\left[ \sum_{i=1}^n \dfrac{\partial Q}{\partial a_i}\dfrac{\partial a_i}{\partial \theta_1}\quad \dots \quad \sum_{i=1}^n \dfrac{\partial Q}{\partial a_i}\dfrac{\partial a_i}{\partial \theta_l}\right]
+\]
+
+After examining the equations, it became clear that each term  represents the multidimensional chain rule of 
+\[
+\sum_{i=1}^n \dfrac{\partial Q}{\partial a_i}\dfrac{\partial a_i}{\partial \theta_j} = \dfrac{\partial Q}{\partial \theta_j}
+\]
+This simplifies the original expression as
+\begin{equation}
+\nabla_{\theta^{\mu}} J=\nabla_aQ^\mu(s,a)\nabla_\theta \mu_\theta(s)=\nabla_{\theta^\mu} Q(s, \mu (s))
+\end{equation}
+
+This rewritten formula is very intuitive, since it says that following the gradient of the reward function with respect to actor's parameters is the same as following the gradient of the critic with respect to the actor's parameters. We are trying to maximize the critic's output!
+
+While in the end I found the equations mentioned in the DPG paper, they are not represented as the final result for some reason.
+
+This small change (basically just a rewrite) has shed light for me on the problematic and allowed the implementation of a much simpler and cleaner (and faster) version of the DDPG algorithm.
+
+
+\subsection{Critic updates}
+Another fact missing from the DDPG paper was the complete computation of the $y$ term used for learning the critic.
+
+In the paper, the $y$-term is computed as $y_i=r_i + \gamma Q'(s_{i + 1}, \mu(s_{i+1}))$. This unfortunately doesn't tell us what to do with the terminating state. I followed the same formula used in DQN, where it is necessary to ground the critic in the terminating state as $y_i=r_i$.
+\medskip
+
+When conducting experiments, I tried several different settings and it turned out that even when the terminating state was not bounded, the algorithm was able to converge on simpler tasks. This is most probably due to the fact that, compared to DQN, DDPG doesn't care about the absolute values of the critic and only uses it's gradient.
+
+In the end I opted for the bounded version on all of the experiments.
+
+\subsection{Adam}
+In my experience, the difference between using SGD and its variants (AdaGrad, AdaMax, RMSProp, Adam) is usually a few percent points in the loss function value after training. This is why I skipped the implementation of Adam (using simple SGD) and focused on different parts of the code.
+
+This has turned out to be a crucial mistake, because the algorithm without Adam was unable to converge. It is unclear if the authors knew about this issue, since they didn't mention it in the paper. See \ref{fig:adam-sgd} for the comparison.
+
+\begin{figure}[htbp]
+\input{plots/ddpg/adam_sgd.pgf}
+\caption{Comparison of Adam and SGD algorithms on the swingup task. Actor=\{50,50\}, Critic=\{100,100\}}
+\centering
+\label{fig:adam-sgd}
+\end{figure}
+
+\section{Exploration vs Exploitation}
+
+Exploration vs exploitation is a dilemma that a RL agent faces when optimizing for some loss function that is a function of the environment. 
+
+At any given point in time the agent has to choose an action from the action space. The exploitation approach would be to choose the action that he knows will produce the most reward. However it is possible (and often the case) that taking another action will lead to a grater reward down the path.
+
+The exploration in the DDPG paper is done by adding time-correlated noise to the actions. The used noise is generated with Ornstein-Uhlenbeck process. 
+
+\subsection{Ornstein-Uhlenbeck Process}
+The Ornstein–Uhlenbeck (OU) process is a stochastic process that, roughly speaking, describes the velocity of a massive Brownian particle under the influence of friction. The process is stationary, Gaussian, and Markovian, and it is the only nontrivial process that satisfies these three conditions, up to allowing linear transformations of the space and time variables. The process can be considered to be a modification of the random walk in continuous time, or Wiener process, in which the properties of the process have been changed so that there is a tendency of the walk to move back towards a central location, with a greater attraction when the process is further away from the center. \cite{cite:wiki-ou}
+
+An OU process satisfies the following stochastic differential equation
+\begin{equation}
+\text{d}x_t=\theta(\mu-x_t)\text{d}t+\sigma \text{d}W_t
+\end{equation}
+where $\theta>0 , \mu , \sigma>0$ are the parameters and $W_t$ denotes the Wiener process. The incremental solution can be then written as
+\begin{equation}
+x_t=x_0 e^{-\theta t}+\mu(1-e^{-\theta t})+\dfrac{\sigma}{\sqrt{2\theta}}e^{-\theta t}W_{e^{2\theta t}-1}
+\end{equation}
+This incremental solution is used in the final implementation. See \ref{plot:ou} for example runs.
+
+The noise is an instrumental part of the DDPG algorithm and without it, there is a little chance the model will find any good solutions and most likely gets stuck in a local extreme. See \ref{plot:ou-compare} for comparisons with and without using noise.
+
+\begin{figure}[h!]
+\input{plots/ddpg/noise_comp.pgf}
+\caption{Comparison runs on the swingup task. Actor=\{50,50\}, Critic=\{100,100\}}
+\centering
+\label{plot:ou-compare}
+\end{figure}
+
+\begin{figure}[h!]
+\input{plots/ddpg/ou.pgf}
+\caption{Example runs of OU process with parameters: $\mu=0$, $\theta=0.15$, $\sigma=0.2$}
+\centering
+\label{plot:ou}
+\end{figure}
+
+\section{Prioritized Experience Replay}
+Experience replay lets online reinforcement learning agents remember and reuse experiences from the past. In the DDPG paper (and prior work), training examples were uniformly sampled from the replay memory. This approach unfortunately doesn't differentiate significance of the training examples. This leads to slow learning, because newly discovered rewarding subpolicies are trained at the same rate as the unrewarding ones.
+ 
+\cite{cite:replay} presented a few prioritization processes, that speed up the learning process and even lead to better found policies. These processes, together with DQN variant called Double DQN are the current state-of-the-art on the Atari task.
+
+The TD error 
+\begin{equation}
+\delta=\left( r_t + \gamma Q(s_{t+1}, a_{t+1})\right) - Q(s_t,a_t)
+\end{equation}
+can be viewed as a sort of an indicator of how 'surprising' a single sample is. 
+
+The technique presented in the paper uses proportional prioritization depending on the TD error of each sample. The probability of sampling a transition is therefore
+
+\begin{equation}
+P(i) = \dfrac{p_i^\alpha}{\sum_k p_k^\alpha}, \quad p_i = |\delta_i|+\epsilon
+\end{equation}
+
+where $\alpha$ determines how much prioritization is used, with $\alpha=0$ corresponding to the uniform case.
+
+Prioritized replay introduces bias because the new update distribution does not correspond with the expectation distribution (uniform). This can be corrected by using importance-sampling weights
+\begin{equation}
+w_i=\dfrac{P(i)^{-1}}{\max_i w_i}
+\end{equation}
+
+that fully compensates for the non-uniform probabilities.The weights are normalized to prevent large values from occurring. These weights can be folded into the Q-learning update by multiplying the gradient of each sample by $w_i$.
+
+\subsection{Implementation}
+The algorithm proposed in the paper is suited for Q-learning (using critic only), however there is no reason why the same algorithm shouldn't work in the case of actor-critic variants.
+To compensate the importance-sampling distribution bias with the actor, I used the same batches and $w$ weights as in the critic.
+
+After implementing the algorithm with a simple array, the complexity is $O(nN)$ where $N$ is the size of the replay memory, $n$ is batch size. This has caused that most time spent learning was wasted on the priority sampling. Further optimization was required. 
+
+I implemented a prioritized queue (heap queue) and used it for maintaining a greedy version of the algorithm, lowering the complexity to $O(n\log_2N)$. This version (also proposed in the paper) chose $n$ of the most 'surprising' candidates. As predicted in the paper, the algorithm was unable to learn anything. This is because the expectation of the deterministicaly picked values did not respect the probability distribution $\mathbb{E}_{s \sim \rho}$.
+
+\subsubsection{Sum trees}
+
+To lower the complexity and preserve the probability sampling, it was necessary to construct a binary sum tree. Sum tree is a tree where each parent node contains the sum of its children values. In this implementation, only the deepest nodes contained the replay memories. 
+
+To simulate the priority sampling, the value of the root node was evenly split into $n$ ranges and a random value was sampled from each range.
+
+This value was then traced in the tree (to trace a value means to find the most right node, where sum of the nodes on the left is less then this value) by traversing from top to bottom, see \ref{fig:sumtree}.
+
+\begin{figure}
+\includegraphics[width=\textwidth]{images/ddpg/sumtree.pdf}
+\caption{The sumtree structure used in prioritization. Example traces are shown in red and green.}
+\label{fig:sumtree}
+\end{figure}
+
+Implementation was done in a heap-like array, where index $i$ is parent to nodes $2i+1, 2i+2$. The complexity of adding, replacing and updating a node is $O(\log_2N)$.
+
+For comparison between uniform and proportional distributions, see \ref{plot:prior}. The proportional version is able to find better solutions faster.
+\begin{figure}[htbp]
+\input{plots/ddpg/prior.pgf}
+\caption{Comparison runs on the swingup task. Actor=\{50,50\}, Critic=\{100,100\}, Small Actor=\{\}
+, Small Critic=\{\}}
+\centering
+\label{plot:prior}
+\end{figure}
+
+\section{Experiments}
+The experiments were conducted on several different networks. I experimented with feedforward and recurrent networks in critic, actor or both. 
+
+The training time suffered when both actor and critic used recurrent nets, because the inputs and the internal states had to have three dimensions instead of four. So I did not use the fully recurrent setup and instead tested on fully feedforward or recurrent actor only.
+
+
+\subsection{Cartpole simulation}
+
+Because it was uncertain if the algorithm would be able to make the robot walk and because the simulator is quite slow, I constructed (using publicly available code\footnote{\url{http://www.moorepants.info/blog/npendulum.html}}) a simpler environment on which I debugged and tested the algorithm.
+
+I created two tasks: cartpole balance and cartpole swingup.
+
+\subsubsection{Balance} 
+The agent tries to balance an inverse pendulum by applying a force to the cartpole. This task is one of the easiest tasks presented in the DDPG paper and was used for the debugging process, since it should converge very quickly.
+
+The episode is terminated after 20 seconds or after the pendulum falls down.
+
+\subsubsection{Swingup}
+One of the harder problems solved in the DDPG paper, the pendulum starts low and should try to swing up and then balance. This task was used mainly for testing NN sizes and training constants.
+
+The episode is terminated after 20 seconds or if the cartpole gets too far from center.
+
+\medskip
+
+The state in both tasks has 4 dimensions, namely $d, \dot{d}, \theta, \dot{\theta}$\footnote{$\theta$ was normalized between $-\pi, \pi$ to ease the reward calculation} - see \ref{fig:pendulum}. The action has one dimension and it's the force applied on the cart horizontally. The used time step was $dt=0.01$.
+
+\begin{figure}[htbp]
+\includegraphics[width=0.5\textwidth]{images/ddpg/pendulum.pdf}
+\caption{Pendulum state representation}
+\label{fig:pendulum}
+\end{figure}
+
+The reward was transferred to the agent as follows:
+
+$$r_t = dt \cdot (|\phi| - 0.1\cdot |a_t| - 0.1\cdot |d|)$$
+
+The coefficients 0.1 were picked arbitrarily, their purpose was to keep the agent from outputting too large values too often ($a_t$) and to stop the cartpole drifting too far from the center ($d$). If the episode ended before the time limit, a negative reward of -0.1 was added to the terminating state.
+
+Video \ref{video:swingup} shows a successfully learned pendulum swingup. See \ref{tab:ddpg} for training details.
+
+\subsubsection{Network size dependency}
+During my experimentation I noticed a correlation between sizes of critic and actor networks and the convergence ability. 
+
+When using a very small actor and a sufficiently large critic, the network was still able to learn to the extent of the actor's ability.
+
+When using a small critic, the algorithm was unable to converge to good results. This is because the critics outputs must be accurate for the actor to learn anything. I also noticed that if the critic was too small to learn, the critic's output slowly diverged to extremely high values. This is a good indicator for checking if the critic is too small.
+
+See \ref{plot:act-off} for comparisons.
+
+\begin{figure}[htbp]
+\input{plots/ddpg/act_off.pgf}
+\caption{Comparison runs on the swingup task. Actor=\{50,50\}, Critic=\{100,100\}, Small Actor=\{\}
+, Small Critic=\{\}}
+\centering
+\label{plot:act-off}
+\end{figure}
+
+\subsection{Robot}
+
+As previously mentioned, the robot's state representation has 27 inputs (12 positions, 12 velocities, 3 accelerometers) and 12 outputs. 
+
+I did a few experiments using position control, however the exploration noise makes the learning harder since there is a big difference between adding a constant to the applied force (where it has the potential to start moving the joint at different speeds) and adding a constant to desired position (the consequences are much more drastic).
+
+For this reason I used torque control in the remainder of the experiments.
+
+\subsubsection{Maintaining balance}
+The first task trained on the robot from scratch was maintaining a balance. While this task would be trivial in position control setting, when using torque control it becomes more challenging.
+
+The reward was transferred to the agent as follows:
+
+$$r_t = dt \cdot (1 - 0.1\cdot |a_t|)$$
+
+If the episode ended before the time limit, a negative reward of -0.1 was added to the terminating state.
+
+The robot was able to successfully balance after \textasciitilde 600k episodes. See video~\ref{video:standing}, \ref{tab:ddpg} for training details.
+
+\subsubsection{Walking}
+A serious problem encountered when training the robot was the training time. While 2.5 million steps of training took about 10 hours\footnote{on a 4-core 3.3 GHz CPU}, the same amount took more than 4 days on the simulator\footnote{The simulator core - physics engine, unfortunately runs on a single thread and has a significant overhead. This made training on a server unfeasible - the training process did not benefit from more CPUs and the training process of 2.5 million steps would take ~2 weeks on available server CPUs.}. I was therefore unable to conduct a full parameter search and all the mentioned tests were done on the best supervised actor \{ rnn, 10\}.
+
+The reward was transferred to the agent as follows:
+
+$$r_t = dt \cdot (0.1 \cdot (1.-\frac{1}{N}\sum_t|a_t|)+100\cdot\Delta x)$$
+
+where $\Delta x$ is the change in position of the robot's torso during step $t$.
+
+If the episode ended before the time limit, a negative reward of -0.1 was added to the terminating state.
+
+Unfortunately due to the mentioned time requirements, I was unable to perform enough tests (or to test long enough) to prove or disprove if the algorithm is capable of walking. The best result so far was a policy that made the robot fall forward on the end of the 15 second episode time limit. It's interesting that this was possible, considering the actor has access to only a limited time frame.

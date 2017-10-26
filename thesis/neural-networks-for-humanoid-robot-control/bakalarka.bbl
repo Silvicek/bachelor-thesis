@@ -1,0 +1,78 @@
+\newcommand{\etalchar}[1]{$^{#1}$}
+\begin{thebibliography}{MKS{\etalchar{+}}15}
+
+\bibitem[HS97]{cite:LSTM}
+Sepp Hochreiter and Jurgen Schmidhuber.
+\newblock Long short-term memory.
+\newblock 1997.
+
+\bibitem[IS15]{cite:batchnorm}
+Sergey Ioffe and Christian Szegedy.
+\newblock Batch normalization: Accelerating deep network training by reducing
+  internal covariate shift.
+\newblock {\em CoRR}, abs/1502.03167, 2015.
+
+\bibitem[KB14]{cite:adam}
+Diederik~P. Kingma and Jimmy Ba.
+\newblock Adam: {A} method for stochastic optimization.
+\newblock {\em CoRR}, abs/1412.6980, 2014.
+
+\bibitem[LHP{\etalchar{+}}15]{cite:DDPG}
+Timothy~P. Lillicrap, Jonathan~J. Hunt, Alexander Pritzel, Nicolas Heess, Tom
+  Erez, Yuval Tassa, David Silver, and Daan Wierstra.
+\newblock Continuous control with deep reinforcement learning.
+\newblock {\em CoRR}, abs/1509.02971, 2015.
+
+\bibitem[MKS{\etalchar{+}}15]{cite:atari}
+Volodymyr Mnih, Koray Kavukcuoglu, David Silver, Andrei~A. Rusu, Joel Veness,
+  Marc~G. Bellemare, Alex Graves, Martin Riedmiller, Andreas~K. Fidjeland,
+  Georg Ostrovski, Stig Petersen, Charles Beattie, Amir Sadik, Ioannis
+  Antonoglou, Helen King, Dharshan Kumaran, Daan Wierstra, Shane Legg, and
+  Demis Hassabis.
+\newblock Human-level control through deep reinforcement learning.
+\newblock {\em Nature}, 518(7540):529--533, Feb 2015.
+\newblock Letter.
+
+\bibitem[MLK95]{cite:RTRL-complexity}
+M.W. Mak, Y.~L. Lu, and K.~W. Ku.
+\newblock Improved real time recurrent learning algorithms: a review and some
+  new approaches.
+\newblock {\em Neurocomputing}, 24:13--36, 1995.
+
+\bibitem[Nog]{cite:gazebo-vrep}
+Lucas Nogueira.
+\newblock Comparative analysis between gazebo and v-rep robotic simulators.
+
+\bibitem[SLH{\etalchar{+}}14]{cite:DPG}
+David Silver, Guy Lever, Nicolas Heess, Thomas Degris, Daan Wierstra, and
+  Martin Riedmiller.
+\newblock Deterministic policy gradient algorithms.
+\newblock 2014.
+
+\bibitem[SQAS15]{cite:replay}
+Tom Schaul, John Quan, Ioannis Antonoglou, and David Silver.
+\newblock Prioritized experience replay.
+\newblock {\em CoRR}, abs/1511.05952, 2015.
+
+\bibitem[vHGS15]{cite:doubledqn}
+Hado van Hasselt, Arthur Guez, and David Silver.
+\newblock Deep reinforcement learning with double q-learning.
+\newblock {\em CoRR}, abs/1509.06461, 2015.
+
+\bibitem[Wika]{cite:wiki-mse}
+Wikipedia.
+\newblock Mean squared error.
+
+\bibitem[Wikb]{cite:wiki-ou}
+Wikipedia.
+\newblock Ornstein–uhlenbeck process.
+
+\bibitem[Wikc]{cite:wiki-rl}
+Wikipedia.
+\newblock Reinforcement learning.
+
+\bibitem[Wikd]{cite:wiki-sl}
+Wikipedia.
+\newblock Supervised learning.
+
+\end{thebibliography}

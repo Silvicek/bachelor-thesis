@@ -1,0 +1,8 @@
+./vrep.sh programming/dlbw/scenes/Nao_empty.ttt
+./vrep.sh programming/dlbw/scenes/Nao_empty_gyro.ttt -t
+./vrep.sh programming/dlbw/scenes/Nao_empty.ttt -l
+./vrep.sh programming/dlbw/scenes/Nao_empty.ttt -l -h -q
+
+./vrep.sh programming/dlbw/scenes/NAO_playback.ttt -p
+./vrep.sh programming/dlbw/scenes/NAO_playback.ttt -p -h -q -s15000
+
